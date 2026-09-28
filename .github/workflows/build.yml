@@ -1,11 +1,13 @@
 name: Build Android APK
-on: 
+
+on:
   push:
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -13,32 +15,29 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
-          cache: 'gradle'
-
-      - name: Create local.properties and missing native files
-        run: |
-          touch local.properties
-          mkdir -p app/src/main/cpp
-          touch app/src/main/cpp/credential_transform.cpp
-          touch app/src/main/cpp/magis_crypto.cpp
-          
-          # Inject the required JNI_OnLoad dummy function
-          cat << 'EOF' > app/src/main/cpp/native_credentials.cpp
-          #include <jni.h>
-          extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
-              return JNI_VERSION_1_6;
-          }
-          EOF
+          cache: gradle
 
       - name: Make Gradle Executable
         run: chmod +x ./gradlew
 
+      - name: Show Project Info
+        run: |
+          echo "===== JAVA ====="
+          java -version
+
+          echo "===== GRADLE ====="
+          ./gradlew --version
+
+          echo "===== PROJECT FILES ====="
+          find . -maxdepth 3 -type f | sort | head -300
+
       - name: Build APK
-        run: ./gradlew :app:assembleDebug --stacktrace
+        run: ./gradlew :app:assembleDebug --stacktrace --info
 
       - name: Upload APK Artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: CachetitoTV-APK
