@@ -21,9 +21,16 @@ jobs:
         run: |
           touch local.properties
           mkdir -p app/src/main/cpp
-          touch app/src/main/cpp/native_credentials.cpp
           touch app/src/main/cpp/credential_transform.cpp
           touch app/src/main/cpp/magis_crypto.cpp
+          
+          # Inject the required JNI_OnLoad dummy function
+          cat << 'EOF' > app/src/main/cpp/native_credentials.cpp
+          #include <jni.h>
+          extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
+              return JNI_VERSION_1_6;
+          }
+          EOF
 
       - name: Make Gradle Executable
         run: chmod +x ./gradlew
