@@ -11,6 +11,8 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
       - name: Make Gradle Executable
         run: chmod +x ./gradlew
       - name: Build APK
