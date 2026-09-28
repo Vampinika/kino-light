@@ -1,7 +1,7 @@
 name: Build Android APK
 on: 
   push:
-  workflow_dispatch: # This adds a "Run workflow" button in GitHub Actions
+  workflow_dispatch:
 
 jobs:
   build:
@@ -15,18 +15,18 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle' # Speeds up future builds
+          cache: 'gradle'
 
-      - name: Create local.properties file
+      - name: Create local.properties and missing native files
         run: |
           touch local.properties
-          # If the app requires specific dummy keys, they can be injected here later
+          mkdir -p app/src/main/cpp
+          touch app/src/main/cpp/native_credentials.cpp
 
       - name: Make Gradle Executable
         run: chmod +x ./gradlew
 
       - name: Build APK
-        # Added --stacktrace so we can see the exact error if it fails
         run: ./gradlew :app:assembleDebug --stacktrace
 
       - name: Upload APK Artifact
