@@ -1,13 +1,11 @@
 name: Build Android APK
-
-on:
+on: 
   push:
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -15,29 +13,40 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: 'temurin'
           java-version: '17'
-          cache: gradle
+          cache: 'gradle'
+
+      - name: Create local.properties and missing native files
+        run: |
+          # Inject required dummy keys into local.properties for the Kotlin compiler
+          cat << 'EOF' > local.properties
+          magis=dummy_magis
+          userId=dummy_user
+          userToken=dummy_token
+          sn=dummy_sn
+          SENTRY_DSN=https://dummy@sentry.io/12345
+          EOF
+          
+          mkdir -p app/src/main/cpp
+          touch app/src/main/cpp/credential_transform.cpp
+          touch app/src/main/cpp/magis_crypto.cpp
+          
+          # Inject the required JNI_OnLoad dummy function for the C++ linker
+          cat << 'EOF' > app/src/main/cpp/native_credentials.cpp
+          #include <jni.h>
+          extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
+              return JNI_VERSION_1_6;
+          }
+          EOF
 
       - name: Make Gradle Executable
         run: chmod +x ./gradlew
 
-      - name: Show Project Info
-        run: |
-          echo "===== JAVA ====="
-          java -version
-
-          echo "===== GRADLE ====="
-          ./gradlew --version
-
-          echo "===== PROJECT FILES ====="
-          find . -maxdepth 3 -type f | sort | head -300
-
       - name: Build APK
-        run: ./gradlew :app:assembleDebug --stacktrace --info
+        run: ./gradlew :app:assembleDebug --stacktrace
 
       - name: Upload APK Artifact
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: CachetitoTV-APK
