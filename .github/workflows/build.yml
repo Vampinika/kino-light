@@ -22,6 +22,7 @@ jobs:
           touch local.properties
           mkdir -p app/src/main/cpp
           touch app/src/main/cpp/native_credentials.cpp
+          touch app/src/main/cpp/credential_transform.cpp
 
       - name: Make Gradle Executable
         run: chmod +x ./gradlew
