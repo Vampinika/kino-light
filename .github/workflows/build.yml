@@ -17,9 +17,9 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Create local.properties and missing native files
+      - name: Create Missing Files and Configurations
         run: |
-          # Inject required dummy keys into local.properties for the Kotlin compiler
+          # 1. Dummy local.properties
           cat << 'EOF' > local.properties
           magis=dummy_magis
           userId=dummy_user
@@ -28,16 +28,32 @@ jobs:
           SENTRY_DSN=https://dummy@sentry.io/12345
           EOF
           
+          # 2. Dummy C++ Files
           mkdir -p app/src/main/cpp
           touch app/src/main/cpp/credential_transform.cpp
           touch app/src/main/cpp/magis_crypto.cpp
-          
-          # Inject the required JNI_OnLoad dummy function for the C++ linker
           cat << 'EOF' > app/src/main/cpp/native_credentials.cpp
           #include <jni.h>
           extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
               return JNI_VERSION_1_6;
           }
+          EOF
+          
+          # 3. Dummy Kotlin Classes
+          mkdir -p app/src/main/java/com/arkiv/player/data/credentials
+          mkdir -p app/src/main/java/com/arkiv/player/data/magis
+          
+          cat << 'EOF' > app/src/main/java/com/arkiv/player/data/credentials/DummyCredentials.kt
+          package com.arkiv.player.data.credentials
+          open class RemoteCredentialsStore
+          open class CredentialsActivator
+          open class SeedRefresher
+          EOF
+          
+          cat << 'EOF' > app/src/main/java/com/arkiv/player/data/magis/DummyMagis.kt
+          package com.arkiv.player.data.magis
+          open class MagisCredentialStore
+          interface MagisPortalClientLike
           EOF
 
       - name: Make Gradle Executable
